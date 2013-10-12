@@ -1,10 +1,5 @@
 <?php
-namespace Core;
-
-function fatal($message)
-{
-    die("FATAL: $message\n");
-}
+namespace IO;
 
 function createDirectory($name)
 {
@@ -13,22 +8,18 @@ function createDirectory($name)
     }
 
     if (!is_dir($name)) {
-        fatal($name . ' is not a directory');
+        \Core\fatal($name . ' is not a directory');
     }
 
     if (!is_writable($name)) {
-        fatal($name . ' is not a writable');
+        \Core\fatal($name . ' is not a writable');
     }
-}
-
-function printInfo($info)
-{
-    print "==> $info\n";
 }
 
 function downloadFile($from, $to)
 {
     createDirectory('temp/cache/builds/');
+    createDirectory('cache/builds/');
     $tmpPath = 'temp/' . $to;
     if (file_exists($tmpPath)) {
         unlink($tmpPath);
