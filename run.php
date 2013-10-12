@@ -3,7 +3,9 @@ require 'config.php';
 require 'functions.php';
 
 $url = 'http://www.magentocommerce.com/downloads/assets/%s/magento-%s.tar.bz2';
+$sampleDataUrl = 'http://www.magentocommerce.com/downloads/assets/%s/magento-sample-data-%s.tar.bz2';
 $fileName = 'magento-%s.tar.bz2';
+$sampleDataFileName = 'magento-sample-data-%s.tar.bz2';
 $cacheBuilds = 'cache/builds/';
 
 \Core\createDirectory($cacheBuilds);
@@ -13,20 +15,34 @@ $cacheBuilds = 'cache/builds/';
 $buildNames = explode("\n",file_get_contents('builds.txt'));
 foreach ($buildNames as $_key => $_buildName) {
     //skip lines with #
-    if (strpos($_buildName, '#') !== false) {
+    if (!$_buildName || strpos($_buildName, '#') !== false) {
         unset($buildNames[$_key]);
         continue;
     }
+
     if (!file_exists($cacheBuilds . sprintf($fileName, $_buildName))) {
         \Core\printInfo('Download magento ' . $_buildName);
-        \Core\printInfo('Download magento ' . sprintf($url, $_buildName, $_buildName));
-        \Core\printInfo('Download magento ' . $cacheBuilds . sprintf($fileName, $_buildName));
         \Core\downloadFile(sprintf($url, $_buildName, $_buildName) , $cacheBuilds . sprintf($fileName, $_buildName));
+    }
+
+    if ($config['install_sample_data']) {
+        $intBuild = intval(str_replace('.', '', $_buildName));
+        $sampleDataBuild = '1.6.1.0';
+        if ($intBuild < 1600) {
+            $sampleDataBuild = '1.2.0';
+        }
+
+        if (!file_exists($cacheBuilds . sprintf($sampleDataFileName, $sampleDataBuild))) {
+            \Core\printInfo('Download sample data ' . $sampleDataBuild);
+            \Core\downloadFile(sprintf($sampleDataUrl, $sampleDataBuild, $sampleDataBuild),
+                $cacheBuilds . sprintf($sampleDataFileName, $sampleDataBuild));
+        }
     }
 }
 unset($_buildName);
 
-//install magento
+//unpack magento
+
 if ($argc < 2) {
     \Core\fatal('Please provide a path to install');
 }
@@ -47,6 +63,8 @@ foreach ($buildNames as $_buildName) {
     }
 }
 
+//install magento
+
 foreach ($buildNames as $_buildName) {
     $_buildPath = "{$pathToInstall}$_buildName";
     if (file_exists("{$pathToInstall}$_buildName/app/etc/local.xml")) {
@@ -56,6 +74,28 @@ foreach ($buildNames as $_buildName) {
     $dbName = $config['db_name'] . '_' . $intBuild;
     $dbPass = $config['db_pass'] ? ' -p' . $config['db_pass'] : '';
     `mysql -h {$config['db_host']} -u {$config['db_user']}$dbPass -e "CREATE DATABASE IF NOT EXISTS $dbName"`;
+
+    if ($config['install_sample_data']) {
+        $sampleDataBuild = '1.6.1.0';
+        if ($intBuild < 1600) {
+            $sampleDataBuild = '1.2.0';
+        }
+
+        if (!file_exists("{$pathToInstall}temp/magento-sample-data-$sampleDataBuild")) {
+            Core\printInfo('Unpack magento sample data ' . $sampleDataBuild);
+            $archive = realpath($cacheBuilds). '/' . sprintf($sampleDataFileName, $sampleDataBuild);
+            \Core\createDirectory("{$pathToInstall}temp/");
+            `cd {$pathToInstall}temp/ && tar xjf $archive`;
+        }
+        if (file_exists("{$pathToInstall}temp/magento-sample-data-$sampleDataBuild")) {
+            Core\printInfo("Apply sample data $sampleDataBuild to $_buildName");
+            `cp -R {$pathToInstall}temp/magento-sample-data-$sampleDataBuild/media/* {$pathToInstall}$_buildName/media/`;
+            $dumpName = "{$pathToInstall}temp/magento-sample-data-$sampleDataBuild/magento_sample_data_for_{$sampleDataBuild}.sql";
+            `mysql -h {$config['db_host']} -u {$config['db_user']}$dbPass $dbName < $dumpName`;
+        } else {
+            \Core\fatal('Error while unarchive ' . $cacheBuilds . sprintf($fileName, $_buildName));
+        }
+    }
 
     `cd $_buildPath && chmod -R o+w media var && chmod o+w app/etc`;
 
@@ -90,4 +130,9 @@ foreach ($buildNames as $_buildName) {
     . " --admin_username \"{$config['admin_username']}\""
     . " --admin_password \"{$config['admin_pass']}\""
     ));
+
+    \Core\printInfo('Start reindex');
+    system("cd $_buildPath && php shell/indexer.php reindexall");
 }
+
+\Core\printInfo('FINISHED');

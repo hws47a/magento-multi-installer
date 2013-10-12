@@ -23,7 +23,7 @@ function createDirectory($name)
 
 function printInfo($info)
 {
-    print "$info\n";
+    print "==> $info\n";
 }
 
 function downloadFile($from, $to)

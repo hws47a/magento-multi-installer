@@ -8,5 +8,6 @@ $config = array(
     'site_url' => 'http://127.0.0.1/example/',
     'admin_email' => 'test@example.com',
     'admin_username' => 'admin',
-    'admin_pass' => 'admin123'
+    'admin_pass' => 'admin123',
+    'install_sample_data' => true
 );

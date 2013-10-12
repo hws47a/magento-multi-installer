@@ -5,7 +5,9 @@ Downloads and install all magento versions what you need.
 Current features:  
 - Automatically download magento versions what you need  
 - Unpack versions to you folder  
-- Install magento versions (and update installator to work with mysql 5.6+)  
+- Install magento versions (and update installator to work with mysql 5.6+)
+- Install sample data
+- Reindex after version install
   
 How to use:  
   
