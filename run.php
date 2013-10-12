@@ -53,10 +53,10 @@ foreach ($buildNames as $_buildName) {
     if (!file_exists("{$pathToInstall}$_buildName")) {
         \Core\printInfo('Unarchive ' . $_buildName);
         $archive = realpath($cacheBuilds). '/' . sprintf($fileName, $_buildName);
-        \Core\createDirectory("{$pathToInstall}temp/$_buildName");
-        `cd {$pathToInstall}temp/$_buildName && tar xjf $archive`;
-        if (file_exists("{$pathToInstall}temp/$_buildName")) {
-            rename("{$pathToInstall}temp/$_buildName/magento", "{$pathToInstall}$_buildName");
+        \Core\createDirectory("{$pathToInstall}.temp/$_buildName");
+        `cd {$pathToInstall}.temp/$_buildName && tar xjf $archive`;
+        if (file_exists("{$pathToInstall}.temp/$_buildName")) {
+            rename("{$pathToInstall}.temp/$_buildName/magento", "{$pathToInstall}$_buildName");
         } else {
             \Core\fatal('Error while unarchive ' . $cacheBuilds . sprintf($fileName, $_buildName));
         }
@@ -81,16 +81,16 @@ foreach ($buildNames as $_buildName) {
             $sampleDataBuild = '1.2.0';
         }
 
-        if (!file_exists("{$pathToInstall}temp/magento-sample-data-$sampleDataBuild")) {
+        if (!file_exists("{$pathToInstall}.temp/magento-sample-data-$sampleDataBuild")) {
             Core\printInfo('Unpack magento sample data ' . $sampleDataBuild);
             $archive = realpath($cacheBuilds). '/' . sprintf($sampleDataFileName, $sampleDataBuild);
-            \Core\createDirectory("{$pathToInstall}temp/");
-            `cd {$pathToInstall}temp/ && tar xjf $archive`;
+            \Core\createDirectory("{$pathToInstall}.temp/");
+            `cd {$pathToInstall}.temp/ && tar xjf $archive`;
         }
-        if (file_exists("{$pathToInstall}temp/magento-sample-data-$sampleDataBuild")) {
+        if (file_exists("{$pathToInstall}.temp/magento-sample-data-$sampleDataBuild")) {
             Core\printInfo("Apply sample data $sampleDataBuild to $_buildName");
-            `cp -R {$pathToInstall}temp/magento-sample-data-$sampleDataBuild/media/* {$pathToInstall}$_buildName/media/`;
-            $dumpName = "{$pathToInstall}temp/magento-sample-data-$sampleDataBuild/magento_sample_data_for_{$sampleDataBuild}.sql";
+            `cp -R {$pathToInstall}.temp/magento-sample-data-$sampleDataBuild/media/* {$pathToInstall}$_buildName/media/`;
+            $dumpName = "{$pathToInstall}.temp/magento-sample-data-$sampleDataBuild/magento_sample_data_for_{$sampleDataBuild}.sql";
             `mysql -h {$config['db_host']} -u {$config['db_user']}$dbPass $dbName < $dumpName`;
         } else {
             \Core\fatal('Error while unarchive ' . $cacheBuilds . sprintf($fileName, $_buildName));
@@ -109,7 +109,7 @@ foreach ($buildNames as $_buildName) {
         }
     }
 
-    \Core\printInfo(exec("cd $_buildPath && php -f install.php -- "
+    system("cd $_buildPath && php -f install.php -- "
     . ' --license_agreement_accepted "yes"'
     . ' --locale "en_US"'
     . ' --timezone "America/Los_Angeles"'
@@ -129,7 +129,7 @@ foreach ($buildNames as $_buildName) {
     . " --admin_email \"{$config['admin_email']}\""
     . " --admin_username \"{$config['admin_username']}\""
     . " --admin_password \"{$config['admin_pass']}\""
-    ));
+    );
 
     \Core\printInfo('Start reindex');
     system("cd $_buildPath && php shell/indexer.php reindexall");
