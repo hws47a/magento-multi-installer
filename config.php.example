@@ -2,12 +2,14 @@
 
 $config = array(
     'db_host' => 'localhost',
-    'db_name' => 'example',
-    'db_user' => 'root',
+    'db_name' => 'example', //will be created different db for each version, e.g. example_1702
+    'db_user' => 'root', //need access to create databases
     'db_pass' => '',
     'site_url' => 'http://127.0.0.1/example/',
+    'secure_url' => 'https://127.0.0.1/example/',
     'admin_email' => 'test@example.com',
     'admin_username' => 'admin',
     'admin_pass' => 'admin123',
-    'install_sample_data' => true
+    'admin_secure' => true,
+    'install_sample_data' => true,
 );

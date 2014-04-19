@@ -18,9 +18,9 @@ function createDirectory($name)
 
 function downloadFile($from, $to)
 {
-    createDirectory('temp/cache/builds/');
-    createDirectory('cache/builds/');
-    $tmpPath = 'temp/' . $to;
+    createDirectory(BASE_PATH .'temp/cache/builds/');
+    createDirectory(BASE_PATH .'cache/builds/');
+    $tmpPath = BASE_PATH . 'temp/' . $to;
     if (file_exists($tmpPath)) {
         unlink($tmpPath);
     }

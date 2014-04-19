@@ -9,7 +9,7 @@ const SAMPLE_DATA_DOWNLOAD_URL = 'http://www.magentocommerce.com/downloads/asset
 
 function downloadBuild($build)
 {
-    $saveTo = BUILDS_CACHE_PATH . sprintf(BUILD_FILE_NAME, $build);
+    $saveTo = BASE_PATH . BUILDS_CACHE_PATH . sprintf(BUILD_FILE_NAME, $build);
     if (!file_exists($saveTo)) {
         \Core\printInfo('Download magento ' . $build);
         \IO\downloadFile(sprintf(BUILD_DOWNLOAD_URL, $build, $build) , $saveTo);
@@ -23,7 +23,7 @@ function downloadSampleData($build)
         $sampleDataBuild = '1.2.0';
     }
 
-    $saveTo = BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
+    $saveTo = BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
     if (!file_exists($saveTo)) {
         \Core\printInfo('Download sample data ' . $sampleDataBuild);
         \IO\downloadFile(sprintf(SAMPLE_DATA_DOWNLOAD_URL, $sampleDataBuild, $sampleDataBuild), $saveTo);
@@ -36,7 +36,7 @@ function unpackBuild($pathToInstall, $build)
     $tempPath = $pathToInstall . '.temp/' . $build;
     if (!file_exists($saveTo)) {
         \Core\printInfo('Unpack ' . $build);
-        $archive = realpath(BUILDS_CACHE_PATH). '/' . sprintf(BUILD_FILE_NAME, $build);
+        $archive = realpath(BASE_PATH . BUILDS_CACHE_PATH). '/' . sprintf(BUILD_FILE_NAME, $build);
         \IO\createDirectory($tempPath);
         system("cd $tempPath && tar xjf $archive");
         if (file_exists($tempPath . '/magento')) {
@@ -52,7 +52,7 @@ function unpackSampleData($pathToInstall, $build)
     $sampleDataBuild = getSampleDataBuild($build);
     if (!file_exists($pathToInstall . '.temp/magento-sample-data-' . $sampleDataBuild)) {
         \Core\printInfo('Unpack magento sample data ' . $sampleDataBuild);
-        $archive = realpath(BUILDS_CACHE_PATH). '/' . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
+        $archive = realpath(BASE_PATH . BUILDS_CACHE_PATH). '/' . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
         \IO\createDirectory("{$pathToInstall}.temp/");
         system("cd {$pathToInstall}.temp/ && tar xjf $archive");
     }
@@ -121,7 +121,7 @@ function applySampleData($pathToInstall, $build)
         $dbPass = $config['db_pass'] ? ' -p' . $config['db_pass'] : '';
         system("mysql -h $dbHost -u $dbUser $dbPass $dbName < $dumpName");
     } else {
-        \Core\fatal('Error while unpack ' . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $build));
+        \Core\fatal('Error while unpack ' . BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $build));
     }
 }
 
@@ -134,9 +134,9 @@ function prepareInstall($pathToInstall, $build)
     if (buildToInt($build) < 1800) {
         //apply fix for mysql 5.6+
         if (buildToInt($build) >= 1600) {
-            system("cp resources/Mysql4.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db/Mysql4.php");
+            system("cp " . BASE_PATH . "resources/Mysql4.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db/Mysql4.php");
         } else {
-            system("cp resources/Db.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db.php");
+            system("cp " . BASE_PATH . "resources/Db.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db.php");
         }
         \Core\printInfo('Fixed installer for mysql 5.6+');
 

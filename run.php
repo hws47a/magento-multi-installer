@@ -1,6 +1,7 @@
 <?php
-require 'config.php';
-require 'include/loader.php';
+define('BASE_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+require BASE_PATH . 'config.php';
+require BASE_PATH . 'include/loader.php';
 
 //check path to install and create directory
 
@@ -12,7 +13,7 @@ $pathToInstall = rtrim($argv[1], '/') . '/';
 
 //download files
 
-$buildNames = explode("\n",file_get_contents('builds.txt'));
+$buildNames = explode("\n",file_get_contents(BASE_PATH . 'builds.txt'));
 foreach ($buildNames as $_key => $_buildName) {
     //skip empty lines and lines with #
     if (!$_buildName || strpos($_buildName, '#') !== false) {
