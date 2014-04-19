@@ -86,11 +86,9 @@ function getDbName($build)
     return $config['db_name'] . '_' . buildToInt($build);
 }
 
-function getSiteUrl($build)
+function getSiteUrl($url, $build)
 {
-    global $config;
-
-    return $config['site_url'] . $build . '/';
+    return $url . $build . '/';
 }
 
 function createDb($build)
@@ -156,9 +154,10 @@ function install($pathToInstall, $build)
     \Core\printInfo('Install ' . $build);
     $buildPath = "{$pathToInstall}$build";
     $dbName = getDbName($build);
-    $siteUrl = getSiteUrl($build);
+    $siteUrl = getSiteUrl($config['site_url'], $build);
+    $secureUrl = isset($config['secure_url']) && $config['secure_url'] ? getSiteUrl($config['secure_url'], $build) : '';
 
-    system("cd $buildPath && php -f install.php -- "
+    $shell = "cd $buildPath && php -f install.php -- "
         . ' --license_agreement_accepted "yes"'
         . ' --locale "en_US"'
         . ' --timezone "America/Los_Angeles"'
@@ -170,15 +169,27 @@ function install($pathToInstall, $build)
         . " --url \"$siteUrl\""
         . ' --use_rewrites "yes"'
         . ' --skip_url_validation "yes"'
-        . ' --use_secure "no"'
-        . ' --secure_base_url ""'
-        . ' --use_secure_admin "no"'
         . ' --admin_firstname "Admin"'
         . ' --admin_lastname "Admin"'
         . " --admin_email \"{$config['admin_email']}\""
         . " --admin_username \"{$config['admin_username']}\""
-        . " --admin_password \"{$config['admin_pass']}\""
-    );
+        . " --admin_password \"{$config['admin_pass']}\"";
+
+    if ($secureUrl) {
+        $shell .= ' --use_secure "yes"'
+            . ' --secure_base_url "' . $secureUrl . '"';
+        if (isset($config['admin_secure']) && $config['admin_secure']) {
+            $shell .= ' --use_secure_admin "yes"';
+        } else {
+            $shell .= ' --use_secure_admin "no"';
+        }
+    } else {
+        $shell .= ' --use_secure "no"'
+            . ' --secure_base_url ""'
+            . ' --use_secure_admin "no"';
+    }
+
+    system($shell);
 }
 
 function reindex($pathToInstall, $build)
