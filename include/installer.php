@@ -91,6 +91,12 @@ function getSiteUrl($url, $build)
     return $url . $build . '/';
 }
 
+function getMySQLVersion() {
+    $output = shell_exec('mysql -V');
+    preg_match('@[0-9]+\.[0-9]+\.[0-9]+@', $output, $version);
+    return $version[0];
+}
+
 function createDb($build)
 {
     global $config;
@@ -130,13 +136,18 @@ function prepareInstall($pathToInstall, $build)
     system("cd $buildPath && chmod -R o+w media var && chmod o+w app/etc");
 
     if (buildToInt($build) < 1800) {
-        //apply fix for mysql 5.6+
-        if (buildToInt($build) >= 1600) {
-            system("cp " . BASE_PATH . "resources/Mysql4.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db/Mysql4.php");
-        } else {
-            system("cp " . BASE_PATH . "resources/Db.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db.php");
+        $version = getMySQLVersion();
+        \Core\printInfo('Mysql version: ' . $version);
+        $version = explode('.', $version);
+        if (count($version) < 2 || ($version[0] > 5 || ($version[0] == 5 && $version[1] > 5))) {
+            //apply fix for mysql 5.6+
+            if (buildToInt($build) >= 1600) {
+                system("cp " . BASE_PATH . "resources/Mysql4.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db/Mysql4.php");
+            } else {
+                system("cp " . BASE_PATH . "resources/Db.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db.php");
+            }
+            \Core\printInfo('Fixed installer for mysql 5.6+');
         }
-        \Core\printInfo('Fixed installer for mysql 5.6+');
 
         //fix php installer for 5.4+ (PHP Extensions "0" must be loaded)
         $installerConfigPath = $buildPath . '/app/code/core/Mage/Install/etc/config.xml';
