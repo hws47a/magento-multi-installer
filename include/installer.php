@@ -139,7 +139,10 @@ function prepareInstall($pathToInstall, $build)
         $version = getMySQLVersion();
         \Core\printInfo('Mysql version: ' . $version);
         $version = explode('.', $version);
-        if (count($version) < 2 || ($version[0] > 5 || ($version[0] == 5 && $version[1] > 5))) {
+        $minVersion = explode('.', '5.6');
+        if (count($version) < 2
+            || ($version[0] > $minVersion[0] || ($version[0] == $minVersion[0] && $version[1] >= $minVersion[1]))
+        ) {
             //apply fix for mysql 5.6+
             if (buildToInt($build) >= 1600) {
                 system("cp " . BASE_PATH . "resources/Mysql4.php $buildPath/app/code/core/Mage/Install/Model/Installer/Db/Mysql4.php");
@@ -149,12 +152,21 @@ function prepareInstall($pathToInstall, $build)
             \Core\printInfo('Fixed installer for mysql 5.6+');
         }
 
-        //fix php installer for 5.4+ (PHP Extensions "0" must be loaded)
-        $installerConfigPath = $buildPath . '/app/code/core/Mage/Install/etc/config.xml';
-        $data = file_get_contents($installerConfigPath);
-        $data = str_replace('<pdo_mysql/>', '<pdo_mysql>1</pdo_mysql>', $data);
-        file_put_contents($installerConfigPath, $data);
-        \Core\printInfo('Fixed installer config for php 5.4+');
+        $phpVersion = phpversion();
+        \Core\printInfo('PHP version: ' . $phpVersion);
+        $phpVersion = explode('.', $phpVersion);
+        $phpMinVersion = explode('.', '5.4');
+        if (count($phpVersion) < 2
+            || ($phpVersion[0] > $phpMinVersion[0]
+                || ($phpVersion[0] == $phpMinVersion[0] && $phpVersion[1] >= $phpMinVersion[1]))
+        ) {
+            //fix php installer for 5.4+ (PHP Extensions "0" must be loaded)
+            $installerConfigPath = $buildPath . '/app/code/core/Mage/Install/etc/config.xml';
+            $data = file_get_contents($installerConfigPath);
+            $data = str_replace('<pdo_mysql/>', '<pdo_mysql>1</pdo_mysql>', $data);
+            file_put_contents($installerConfigPath, $data);
+            \Core\printInfo('Fixed installer config for php 5.4+');
+        }
     }
 }
 
