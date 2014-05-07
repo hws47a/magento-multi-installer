@@ -2,12 +2,13 @@ MAGENTO MULTI INSTALLER
   
 Downloads and install all magento versions what you need.  
   
-Current features:  
+Current features:
 - Automatically download magento versions what you need  
 - Unpack versions to you folder  
 - Install magento versions (and update installator to work with mysql 5.6+ and php 5.4+)
 - Install sample data
 - Reindex after version install
+- Install extensions using modman
   
 How to use:  
   

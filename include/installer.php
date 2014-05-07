@@ -7,6 +7,16 @@ const BUILD_DOWNLOAD_URL = 'http://www.magentocommerce.com/downloads/assets/%s/m
 const SAMPLE_DATA_FILE_NAME = 'magento-sample-data-%s.tar.bz2';
 const SAMPLE_DATA_DOWNLOAD_URL = 'http://www.magentocommerce.com/downloads/assets/%s/magento-sample-data-%s.tar.bz2';
 
+function _getMysqlConnectLine()
+{
+    global $config;
+    $dbHost = $config['db_host'];
+    $dbUser = $config['db_user'];
+    $dbPass = $config['db_pass'] ? ' -p' . $config['db_pass'] : '';
+
+    return "mysql -h $dbHost -u $dbUser $dbPass";
+}
+
 function downloadBuild($build)
 {
     $saveTo = BASE_PATH . BUILDS_CACHE_PATH . sprintf(BUILD_FILE_NAME, $build);
@@ -99,13 +109,8 @@ function getMySQLVersion() {
 
 function createDb($build)
 {
-    global $config;
-
-    $dbHost = $config['db_host'];
     $dbName = getDbName($build);
-    $dbUser = $config['db_user'];
-    $dbPass = $config['db_pass'] ? ' -p' . $config['db_pass'] : '';
-    system("mysql -h $dbHost -u $dbUser $dbPass -e \"CREATE DATABASE IF NOT EXISTS $dbName\"");
+    system(_getMysqlConnectLine() . " -e \"CREATE DATABASE IF NOT EXISTS $dbName\"");
 }
 
 function applySampleData($pathToInstall, $build)
@@ -118,12 +123,8 @@ function applySampleData($pathToInstall, $build)
         system("cp -R $sampleDataPath/media/* {$pathToInstall}$build/media/");
         $dumpName = "$sampleDataPath/magento_sample_data_for_{$sampleDataBuild}.sql";
 
-        global $config;
-        $dbHost = $config['db_host'];
         $dbName = getDbName($build);
-        $dbUser = $config['db_user'];
-        $dbPass = $config['db_pass'] ? ' -p' . $config['db_pass'] : '';
-        system("mysql -h $dbHost -u $dbUser $dbPass $dbName < $dumpName");
+        system(_getMysqlConnectLine() . " $dbName < $dumpName");
     } else {
         \Core\fatal('Error while unpacking ' . BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $build));
     }
@@ -220,4 +221,28 @@ function reindex($pathToInstall, $build)
     \Core\printInfo('Start reindex');
     $buildPath = "{$pathToInstall}$build";
     system("cd $buildPath && php shell/indexer.php reindexall");
+}
+
+function installModmanModule($pathToInstall, $build, $url, $alias)
+{
+    if (!file_exists($pathToInstall . '/.modman/')) {
+        mkdir($pathToInstall . '/.modman/');
+    }
+    if (!file_exists($pathToInstall . '/.modman/' . $alias)) {
+        \Core\printInfo(sprintf('Installing %s from %s', $alias, $url));
+        system("cd {$pathToInstall}/.modman/ && git clone $url $alias");
+    }
+
+    \Core\printInfo('Deploy ' . $alias . ' to ' . $build);
+    $buildPath = "{$pathToInstall}$build";
+    if (!file_exists($buildPath . '/.modman/')) {
+        mkdir($buildPath . '/.modman/');
+    }
+    system(sprintf('ln -s %s %s', realpath($pathToInstall . '/.modman/' . $alias), $buildPath . '/.modman/' . $alias));
+    system(sprintf('cd %s && modman %s deploy', $buildPath, $alias));
+
+    //allow template symlinks
+    \Core\printInfo('Allowing template symlinks');
+    $sql = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', 0, 'dev/template/allow_symlink', '1');";
+    system(sprintf('%s %s -e "%s"',_getMysqlConnectLine(), getDbName($build), $sql));
 }

@@ -12,4 +12,7 @@ $config = array(
     'admin_pass' => 'admin123',
     'admin_secure' => true,
     'install_sample_data' => true,
+    'modman_modules' => array(
+        //'easy_ajax' => 'https://github.com/hws47a/VF_EasyAjax.git',
+    ),
 );

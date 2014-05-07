@@ -47,6 +47,12 @@ foreach ($buildNames as $_key => $_buildName) {
     \Installer\prepareInstall($pathToInstall, $_buildName);
     \Installer\install($pathToInstall, $_buildName);
     \Installer\reindex($pathToInstall, $_buildName);
+
+    if (isset($config['modman_modules']) && !empty($config['modman_modules'])) {
+        foreach ($config['modman_modules'] as $alias => $url) {
+            \Installer\installModmanModule($pathToInstall, $_buildName, $url, $alias);
+        }
+    }
 }
 
 \Core\printInfo('FINISHED');
