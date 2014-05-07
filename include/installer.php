@@ -11,7 +11,7 @@ function downloadBuild($build)
 {
     $saveTo = BASE_PATH . BUILDS_CACHE_PATH . sprintf(BUILD_FILE_NAME, $build);
     if (!file_exists($saveTo)) {
-        \Core\printInfo('Download magento ' . $build);
+        \Core\printInfo('Downloading magento ' . $build);
         \IO\downloadFile(sprintf(BUILD_DOWNLOAD_URL, $build, $build) , $saveTo);
     }
 }
@@ -25,7 +25,7 @@ function downloadSampleData($build)
 
     $saveTo = BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
     if (!file_exists($saveTo)) {
-        \Core\printInfo('Download sample data ' . $sampleDataBuild);
+        \Core\printInfo('Downloading sample data ' . $sampleDataBuild);
         \IO\downloadFile(sprintf(SAMPLE_DATA_DOWNLOAD_URL, $sampleDataBuild, $sampleDataBuild), $saveTo);
     }
 }
@@ -35,14 +35,14 @@ function unpackBuild($pathToInstall, $build)
     $saveTo = $pathToInstall . $build;
     $tempPath = $pathToInstall . '.temp/' . $build;
     if (!file_exists($saveTo)) {
-        \Core\printInfo('Unpack ' . $build);
+        \Core\printInfo('Unpacking ' . $build);
         $archive = realpath(BASE_PATH . BUILDS_CACHE_PATH). '/' . sprintf(BUILD_FILE_NAME, $build);
         \IO\createDirectory($tempPath);
         system("cd $tempPath && tar xjf $archive");
         if (file_exists($tempPath . '/magento')) {
             rename($tempPath . '/magento', $saveTo);
         } else {
-            \Core\fatal('Error while unarchive ' . $archive);
+            \Core\fatal('Error while unarchiving ' . $archive);
         }
     }
 }
@@ -51,7 +51,7 @@ function unpackSampleData($pathToInstall, $build)
 {
     $sampleDataBuild = getSampleDataBuild($build);
     if (!file_exists($pathToInstall . '.temp/magento-sample-data-' . $sampleDataBuild)) {
-        \Core\printInfo('Unpack magento sample data ' . $sampleDataBuild);
+        \Core\printInfo('Unpacking magento sample data ' . $sampleDataBuild);
         $archive = realpath(BASE_PATH . BUILDS_CACHE_PATH). '/' . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
         \IO\createDirectory("{$pathToInstall}.temp/");
         system("cd {$pathToInstall}.temp/ && tar xjf $archive");
@@ -114,7 +114,7 @@ function applySampleData($pathToInstall, $build)
 
     $sampleDataPath = $pathToInstall . '.temp/magento-sample-data-' . $sampleDataBuild;
     if (file_exists($sampleDataPath)) {
-        \Core\printInfo("Apply sample data v$sampleDataBuild to magento $build");
+        \Core\printInfo("Applying sample data v$sampleDataBuild to magento $build");
         system("cp -R $sampleDataPath/media/* {$pathToInstall}$build/media/");
         $dumpName = "$sampleDataPath/magento_sample_data_for_{$sampleDataBuild}.sql";
 
@@ -125,7 +125,7 @@ function applySampleData($pathToInstall, $build)
         $dbPass = $config['db_pass'] ? ' -p' . $config['db_pass'] : '';
         system("mysql -h $dbHost -u $dbUser $dbPass $dbName < $dumpName");
     } else {
-        \Core\fatal('Error while unpack ' . BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $build));
+        \Core\fatal('Error while unpacking ' . BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $build));
     }
 }
 

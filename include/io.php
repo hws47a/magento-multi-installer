@@ -20,7 +20,7 @@ function downloadFile($from, $to)
 {
     createDirectory(BASE_PATH .'temp/cache/builds/');
     createDirectory(BASE_PATH .'cache/builds/');
-    $tmpPath = BASE_PATH . 'temp/' . $to;
+    $tmpPath = BASE_PATH . 'temp/' . basename($to);
     if (file_exists($tmpPath)) {
         unlink($tmpPath);
     }
