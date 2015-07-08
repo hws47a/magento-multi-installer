@@ -28,10 +28,7 @@ function downloadBuild($build)
 
 function downloadSampleData($build)
 {
-    $sampleDataBuild = '1.6.1.0';
-    if (buildToInt($build) < 1610) {
-        $sampleDataBuild = '1.2.0';
-    }
+    $sampleDataBuild = getSampleDataBuild($build);
 
     $saveTo = BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild);
     if (!file_exists($saveTo)) {
@@ -81,7 +78,10 @@ function buildToInt($build)
 
 function getSampleDataBuild($build)
 {
-    $sampleDataBuild = '1.6.1.0';
+    $sampleDataBuild = '1.9.1.0';
+    if (buildToInt($build) < buildToInt($sampleDataBuild)) {
+        $sampleDataBuild = '1.6.1.0';
+    }
     if (buildToInt($build) < buildToInt($sampleDataBuild)) {
         $sampleDataBuild = '1.2.0';
     }
@@ -243,6 +243,6 @@ function installModmanModule($pathToInstall, $build, $url, $alias)
 
     //allow template symlinks
     \Core\printInfo('Allowing template symlinks');
-    $sql = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', 0, 'dev/template/allow_symlink', '1');";
+    $sql = "INSERT INTO core_config_data (scope, scope_id, path, value) VALUES ('default', 0, 'dev/template/allow_symlink', '1') ON DUPLICATE KEY UPDATE value = 1;";
     system(sprintf('%s %s -e "%s"',_getMysqlConnectLine(), getDbName($build), $sql));
 }
