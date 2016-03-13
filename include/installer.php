@@ -199,6 +199,7 @@ class Installer
             \Core\printInfo("Applying sample data $sampleDataBuild to magento {$this->build}");
             $buildPath = $this->getBuildPath();
             system("cp -R $sampleDataPath/media/* {$buildPath}/media");
+            system("cp -R $sampleDataPath/skin/* {$buildPath}/skin");
             $dumpName = "$sampleDataPath/magento_sample_data_for_{$sampleDataBuild}.sql";
 
             $dbName = $this->getDbName();
