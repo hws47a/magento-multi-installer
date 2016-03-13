@@ -22,37 +22,25 @@ $pathToInstall = rtrim($argv[1], '/') . '/';
 
 //download files
 
-$buildNames = explode("\n",file_get_contents(BASE_PATH . 'builds.txt'));
-foreach ($buildNames as $_key => $_buildName) {
-    //skip empty lines and lines with #
-    if (!$_buildName || strpos($_buildName, '#') !== false) {
-        continue;
-    }
+$buildNames = array_filter(explode("\n",file_get_contents(BASE_PATH . 'builds.txt')), function ($value) {
+    return $value && strpos($value, '#') === false;
+});
+rsort($buildNames);
+
+//only latest version for single install
+if (isset($config['single_install']) && $config['single_install']) {
+    $buildNames = [$buildNames[0]];
+}
+
+foreach ($buildNames as $_buildName) {
+    $installer = new \Installer\Installer($config, $pathToInstall, $_buildName);
 
     //skip if installed
-    if (\Installer\isBuildInstalled($pathToInstall, $_buildName)) {
+    if ($installer->isBuildInstalled()) {
         continue;
     }
 
-    \Installer\downloadBuild($_buildName);
-    \Installer\unpackBuild($pathToInstall, $_buildName);
-    \Installer\createDb($_buildName);
-
-    if ($config['install_sample_data']) {
-        \Installer\downloadSampleData($_buildName);
-        \Installer\unpackSampleData($pathToInstall, $_buildName);
-        \Installer\applySampleData($pathToInstall, $_buildName);
-    }
-
-    \Installer\prepareInstall($pathToInstall, $_buildName);
-    \Installer\install($pathToInstall, $_buildName);
-    \Installer\reindex($pathToInstall, $_buildName);
-
-    if (isset($config['modman_modules']) && !empty($config['modman_modules'])) {
-        foreach ($config['modman_modules'] as $alias => $url) {
-            \Installer\installModmanModule($pathToInstall, $_buildName, $url, $alias);
-        }
-    }
+    $installer->run();
 }
 
 \Core\printInfo('FINISHED');
