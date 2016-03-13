@@ -99,11 +99,11 @@ class Installer
             system("cd $tempPath && tar xzf $archive");
             $unpackedPath = $tempPath . explode('/', $this->getConfig('github_repo'))[1] . '-' . $this->build;
             if (file_exists($unpackedPath)) {
-                system('cp -R ' . $unpackedPath . '/ ' . $saveTo);
+                $command = 'mv ' . $unpackedPath . '/* ' . $saveTo;
+                system($command);
                 if (!file_exists($saveTo . '/app/Mage.php')) {
-                    \Core\fatal('Error while copy: ' . 'cp -R ' . $unpackedPath . '/ ' . $saveTo);
+                    \Core\fatal('Error while copy: ' . $command);
                 }
-                print system('rm -rf ' . $unpackedPath);
             } else {
                 \Core\fatal('Error while un archiving ' . $tempPath . '/' . $unpackedPath);
             }
@@ -196,13 +196,14 @@ class Installer
 
         $sampleDataPath = $this->pathToInstall . '/.temp/magento-sample-data-' . $sampleDataBuild;
         if (file_exists($sampleDataPath)) {
-            \Core\printInfo("Applying sample data v$sampleDataBuild to magento {$this->build}");
+            \Core\printInfo("Applying sample data $sampleDataBuild to magento {$this->build}");
             $buildPath = $this->getBuildPath();
-            system("cp -R $sampleDataPath/media/ {$buildPath}/media");
+            system("cp -R $sampleDataPath/media/* {$buildPath}/media");
             $dumpName = "$sampleDataPath/magento_sample_data_for_{$sampleDataBuild}.sql";
 
             $dbName = $this->getDbName();
             system($this->getMysqlConnectLine() . " $dbName < $dumpName");
+            system('rm -rf ' . $sampleDataPath);
         } else {
             \Core\fatal('Error while unpacking ' . BASE_PATH . BUILDS_CACHE_PATH . sprintf(SAMPLE_DATA_FILE_NAME, $sampleDataBuild));
         }
